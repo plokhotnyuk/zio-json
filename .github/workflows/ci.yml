@@ -65,7 +65,7 @@ jobs:
         uses: actions/setup-java@v4.2.1
         with:
           distribution: temurin
-          java-version: 8
+          java-version: 11
           check-latest: true
       - name: Cache scala dependencies
         uses: coursier/cache-action@v6
@@ -86,6 +86,9 @@ jobs:
         uses: actions/checkout@v4.1.2
         with:
           fetch-depth: 0
+      - name: Install Boehm GC
+        if: ${{ startsWith(matrix.platform, 'Native') }}
+        run: sudo apt-get update && sudo apt-get install -y libgc-dev
       - name: Setup Java
         uses: actions/setup-java@v4.2.1
         with:
@@ -124,7 +127,7 @@ jobs:
         uses: actions/setup-java@v4.2.1
         with:
           distribution: temurin
-          java-version: 8
+          java-version: 11
           check-latest: true
       - name: Release
         run: sbt ci-release

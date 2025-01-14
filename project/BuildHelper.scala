@@ -1,3 +1,7 @@
+import com.typesafe.tools.mima.core.Problem
+import com.typesafe.tools.mima.core.ProblemFilters.exclude
+import com.typesafe.tools.mima.plugin.MimaKeys.{ mimaBinaryIssueFilters, mimaFailOnProblem, mimaPreviousArtifacts }
+import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport.mimaCheckDirection
 import explicitdeps.ExplicitDepsPlugin.autoImport.*
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport.*
 import sbt.*
@@ -5,6 +9,7 @@ import sbt.Keys.*
 import sbtbuildinfo.*
 import sbtbuildinfo.BuildInfoKeys.*
 import sbtcrossproject.CrossPlugin.autoImport.*
+import sbtdynver.DynVerPlugin.autoImport.previousStableVersion
 
 import scala.scalanative.sbtplugin.ScalaNativePlugin.autoImport.*
 
@@ -237,7 +242,28 @@ object BuildHelper {
     Test / parallelExecution := true,
     incOptions ~= (_.withLogRecompileOnMacro(false)),
     autoAPIMappings := true,
-    unusedCompileDependenciesFilter -= moduleFilter("org.scala-js", "scalajs-library")
+    unusedCompileDependenciesFilter -= moduleFilter("org.scala-js", "scalajs-library"),
+    mimaPreviousArtifacts := previousStableVersion.value.map(organization.value %% name.value % _).toSet,
+    mimaCheckDirection := {
+      def isPatch: Boolean = {
+        val Array(newMajor, newMinor, _) = version.value.split('.')
+        val Array(oldMajor, oldMinor, _) = previousStableVersion.value.getOrElse(version.value).split('.')
+        newMajor == oldMajor && newMinor == oldMinor
+      }
+
+      if (isPatch) "both"
+      else "backward"
+    },
+    mimaBinaryIssueFilters ++= Seq(
+      exclude[Problem]("zio.json.macros#package.<clinit>"),
+      exclude[Problem]("zio.JsonPackagePlatformSpecific.*"),
+      exclude[Problem]("zio.json.JsonDecoderPlatformSpecific.*"),
+      exclude[Problem]("zio.json.JsonEncoderPlatformSpecific.*"),
+      exclude[Problem]("zio.json.internal.*"),
+      exclude[Problem]("zio.json.package.*"),
+      exclude[Problem]("zio.json.yaml.internal.*")
+    ),
+    mimaFailOnProblem := true
   )
 
   def macroExpansionSettings = Seq(

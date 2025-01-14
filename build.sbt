@@ -1,4 +1,5 @@
 import BuildHelper.*
+import com.typesafe.tools.mima.plugin.MimaKeys.mimaPreviousArtifacts
 import explicitdeps.ExplicitDepsPlugin.autoImport.moduleFilterRemoveValue
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
@@ -60,7 +61,8 @@ val zioVersion = "2.1.14"
 lazy val zioJsonRoot = project
   .in(file("."))
   .settings(
-    publish / skip := true,
+    publish / skip        := true,
+    mimaPreviousArtifacts := Set(),
     unusedCompileDependenciesFilter -= moduleFilter("org.scala-js", "scalajs-library")
   )
   .aggregate(
@@ -400,6 +402,7 @@ lazy val docs = project
       zioJsonInteropScalaz7x.jvm,
       zioJsonGolden
     ),
+    mimaPreviousArtifacts := Set(),
     readmeAcknowledgement :=
       """|- Uses [JsonTestSuite](https://github.com/nst/JSONTestSuite) to test parsing. (c) 2016 Nicolas Seriot)
          |

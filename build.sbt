@@ -127,8 +127,8 @@ lazy val zioJson = crossProject(JSPlatform, JVMPlatform, NativePlatform)
             "org.scala-lang"                          % "scala-reflect"         % scalaVersion.value % Provided,
             "com.softwaremill.magnolia1_2"          %%% "magnolia"              % "1.1.10",
             "io.circe"                              %%% "circe-generic-extras"  % "0.14.4"           % "test",
-            "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core"   % "2.30.9"           % "test",
-            "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % "2.30.9"           % "test"
+            "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core"   % "2.33.0"           % "test",
+            "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % "2.33.0"           % "test"
           )
       }
     },
@@ -236,13 +236,13 @@ lazy val zioJson = crossProject(JSPlatform, JVMPlatform, NativePlatform)
           if (n >= 13) {
             Seq(
               "com.particeep"      %% "play-json-extensions" % "0.43.1" % "test",
-              "com.typesafe.play" %%% "play-json"            % "2.9.4"  % "test",
+              "com.typesafe.play" %%% "play-json"            % "2.10.6" % "test",
               "org.typelevel"      %% "jawn-ast"             % "1.6.0"  % "test"
             )
           } else {
             Seq(
               "ai.x"               %% "play-json-extensions" % "0.42.0" % "test",
-              "com.typesafe.play" %%% "play-json"            % "2.9.4"  % "test",
+              "com.typesafe.play" %%% "play-json"            % "2.10.6" % "test",
               "org.typelevel"      %% "jawn-ast"             % "1.6.0"  % "test"
             )
           }
@@ -332,9 +332,9 @@ lazy val zioJsonInteropHttp4s = project
   .settings(
     crossScalaVersions -= ScalaDotty,
     libraryDependencies ++= Seq(
-      "org.http4s"    %% "http4s-dsl"       % "0.23.29",
+      "org.http4s"    %% "http4s-dsl"       % "0.23.30",
       "dev.zio"       %% "zio"              % zioVersion,
-      "org.typelevel" %% "cats-effect"      % "3.4.9",
+      "org.typelevel" %% "cats-effect"      % "3.5.7",
       "dev.zio"       %% "zio-interop-cats" % "23.1.0.3" % "test",
       "dev.zio"       %% "zio-test"         % zioVersion % "test",
       "dev.zio"       %% "zio-test-sbt"     % zioVersion % "test"

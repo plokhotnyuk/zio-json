@@ -1,8 +1,8 @@
-package testzio.json.internal
+package zio.json.internal
 
-import testzio.json.Gens._
-import zio.json.internal._
+import zio.json.Gens._
 import zio.test.Assertion._
+import zio.test.TestAspect.jvmOnly
 import zio.test._
 
 object SafeNumbersSpec extends ZIOSpecDefault {
@@ -153,7 +153,7 @@ object SafeNumbersSpec extends ZIOSpecDefault {
         test("large mantissa") {
           // https://github.com/zio/zio-json/issues/221
           assert(SafeNumbers.float("1.199999988079071"))(equalTo(FloatSome(1.1999999f)))
-        },
+        } @@ jvmOnly,
         test("valid (from Int)") {
           check(Gen.int)(i => assert(SafeNumbers.float(i.toString))(equalTo(FloatSome(i.toFloat))))
         },

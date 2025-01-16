@@ -1,15 +1,15 @@
 package zio.json
 
-import java.nio.charset.StandardCharsets.UTF_8
 import java.util.concurrent.TimeUnit
 
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import io.circe
+import io.circe.Codec
+import io.circe.generic.semiauto.deriveCodec
 import zio.json.SyntheticBenchmarks._
-import testzio.json.TestUtils._
+import zio.json.TestUtils._
 import org.openjdk.jmh.annotations._
-import play.api.libs.{ json => Play }
 
 import scala.util.Try
 
@@ -19,18 +19,8 @@ object Nested {
     DeriveJsonDecoder.gen
   implicit lazy val zioJsonEncoder: JsonEncoder[Nested] =
     DeriveJsonEncoder.gen
-
-  implicit val customConfig: circe.generic.extras.Configuration =
-    circe.generic.extras.Configuration.default
-      .copy(discriminator = Some("type"))
-  implicit lazy val circeJsonDecoder: circe.Decoder[Nested] =
-    circe.generic.extras.semiauto.deriveConfiguredDecoder[Nested]
-  implicit lazy val circeEncoder: circe.Encoder[Nested] =
-    circe.generic.extras.semiauto.deriveConfiguredEncoder[Nested]
-
-  implicit lazy val playFormatter: Play.Format[Nested] =
-    Play.Json.format[Nested]
-
+  implicit lazy val circeCodec: Codec[Nested] =
+    deriveCodec
 }
 
 @State(Scope.Thread)
@@ -39,7 +29,7 @@ object Nested {
 @Fork(value = 1)
 class SyntheticBenchmarks {
   // @Param(Array("100", "1000"))
-  var size: Int               = 500
+  var size: Int               = 100
   var jsonString: String      = _
   var jsonChars: CharSequence = _
   var decoded: Nested         = _
@@ -60,14 +50,15 @@ class SyntheticBenchmarks {
     assert(decodeJsoniterSuccess() == decodeZioSuccess())
 
     assert(decodeCirceSuccess() == decodeZioSuccess())
-
-    assert(decodePlaySuccess() == decodeZioSuccess())
   }
 
   @Benchmark
   def decodeJsoniterSuccess(): Either[String, Nested] =
-    Try(readFromArray(jsonString.getBytes(UTF_8)))
+    Try(readFromString(jsonString))
       .fold(t => Left(t.toString), Right(_))
+
+  @Benchmark
+  def encodeJsoniter(): String = writeToString(decoded)
 
   @Benchmark
   def decodeCirceSuccess(): Either[circe.Error, Nested] =
@@ -81,22 +72,12 @@ class SyntheticBenchmarks {
   }
 
   @Benchmark
-  def decodePlaySuccess(): Either[String, Nested] =
-    Try(Play.Json.parse(jsonString).as[Nested])
-      .fold(t => Left(t.toString), Right.apply)
-
-  @Benchmark
-  def encodePlay(): String =
-    Play.Json.stringify(implicitly[Play.Writes[Nested]].writes(decoded))
-
-  @Benchmark
   def decodeZioSuccess(): Either[String, Nested] =
     jsonChars.fromJson[Nested]
 
   @Benchmark
   def encodeZio(): CharSequence =
     JsonEncoder[Nested].encodeJson(decoded, None)
-
 }
 
 object SyntheticBenchmarks {

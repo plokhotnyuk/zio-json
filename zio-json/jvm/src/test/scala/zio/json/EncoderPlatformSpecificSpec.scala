@@ -1,12 +1,12 @@
 package zio.json
 
 import io.circe
-import testzio.json.TestUtils._
-import testzio.json.data.geojson.generated._
-import testzio.json.data.googlemaps._
-import testzio.json.data.twitter._
 import zio.Chunk
+import zio.json.TestUtils._
 import zio.json.ast.Json
+import zio.json.data.geojson.generated._
+import zio.json.data.googlemaps._
+import zio.json.data.twitter._
 import zio.stream.{ ZSink, ZStream }
 import zio.test.Assertion._
 import zio.test.{ ZIOSpecDefault, assert, _ }
@@ -15,7 +15,7 @@ import java.io.IOException
 import java.nio.file.Files
 
 object EncoderPlatformSpecificSpec extends ZIOSpecDefault {
-  import testzio.json.DecoderSpec.logEvent._
+  import zio.json.DecoderSpec.logEvent._
 
   val spec =
     suite("Encoder")(

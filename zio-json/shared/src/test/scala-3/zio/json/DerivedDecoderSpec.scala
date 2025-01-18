@@ -25,7 +25,8 @@ object DerivedDecoderSpec extends ZIOSpecDefault {
     test("Derives for a sum sealed trait Enumeration type") {
       sealed trait Foo derives JsonDecoder
       object Foo:
-        @jsonHint("Barrr") case object Bar extends Foo
+        @jsonHint("Barrr")
+        case object Bar extends Foo
         case object Baz extends Foo
         case object Qux extends Foo
 
@@ -36,7 +37,8 @@ object DerivedDecoderSpec extends ZIOSpecDefault {
       @jsonDiscriminator("$type")
       sealed trait Foo derives JsonDecoder
       object Foo:
-        @jsonHint("Barrr") case object Bar extends Foo
+        @jsonHint("Barrr")
+        case object Bar extends Foo
         case object Baz extends Foo
         case object Qux extends Foo
 

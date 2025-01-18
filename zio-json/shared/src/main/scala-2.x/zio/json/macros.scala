@@ -350,17 +350,15 @@ object DeriveJsonDecoder {
     val jsonHintFormat: JsonMemberFormat =
       ctx.annotations.collectFirst { case jsonHintNames(format) => format }.getOrElse(config.sumTypeMapping)
     val names: Array[String] = ctx.subtypes.map { p =>
-      p.annotations.collectFirst { case jsonHint(name) =>
-        name
-      }.getOrElse(jsonHintFormat(p.typeName.short))
+      p.annotations.collectFirst { case jsonHint(name) => name}.getOrElse(jsonHintFormat(p.typeName.short))
     }.toArray
     val matrix: StringMatrix = new StringMatrix(names)
-    lazy val tcs: Array[JsonDecoder[Any]] =
-      ctx.subtypes.map(_.typeclass).toArray.asInstanceOf[Array[JsonDecoder[Any]]]
+    lazy val tcs: Array[JsonDecoder[Any]] = ctx.subtypes.map(_.typeclass).toArray.asInstanceOf[Array[JsonDecoder[Any]]]
     lazy val namesMap: Map[String, Int] = names.zipWithIndex.toMap
 
     def discrim =
       ctx.annotations.collectFirst { case jsonDiscriminator(n) => n }.orElse(config.sumTypeHandling.discriminatorField)
+
     if (discrim.isEmpty)
       new JsonDecoder[A] {
         val spans: Array[JsonError] = names.map(JsonError.ObjectAccess)
@@ -368,10 +366,9 @@ object DeriveJsonDecoder {
           Lexer.char(trace, in, '{')
           // we're not allowing extra fields in this encoding
           if (Lexer.firstField(trace, in)) {
-            val field = Lexer.field(trace, in, matrix)
-            if (field != -1) {
-              val trace_ = spans(field) :: trace
-              val a      = tcs(field).unsafeDecode(trace_, in).asInstanceOf[A]
+            val idx = Lexer.field(trace, in, matrix)
+            if (idx != -1) {
+              val a = tcs(idx).unsafeDecode(spans(idx) :: trace, in).asInstanceOf[A]
               Lexer.char(trace, in, '}')
               a
             } else Lexer.error("invalid disambiguator", trace)
@@ -383,9 +380,8 @@ object DeriveJsonDecoder {
             case Json.Obj(chunk) if chunk.size == 1 =>
               val (key, inner) = chunk.head
               namesMap.get(key) match {
-                case Some(idx) =>
-                  tcs(idx).unsafeFromJsonAST(JsonError.ObjectAccess(key) :: trace, inner).asInstanceOf[A]
-                case None => Lexer.error("Invalid disambiguator", trace)
+                case Some(idx) => tcs(idx).unsafeFromJsonAST(spans(idx) :: trace, inner).asInstanceOf[A]
+                case _ => Lexer.error("Invalid disambiguator", trace)
               }
             case Json.Obj(_) => Lexer.error("Not an object with a single field", trace)
             case _           => Lexer.error("Not an object", trace)
@@ -393,9 +389,9 @@ object DeriveJsonDecoder {
       }
     else
       new JsonDecoder[A] {
-        val hintfield               = discrim.get
-        val hintmatrix              = new StringMatrix(Array(hintfield))
-        val spans: Array[JsonError] = names.map(JsonError.Message)
+        private[this] val hintfield               = discrim.get
+        private[this] val hintmatrix              = new StringMatrix(Array(hintfield))
+        private[this] val spans = names.map(JsonError.Message)
 
         def unsafeDecode(trace: List[JsonError], in: RetractReader): A = {
           val in_ = internal.RecordingReader(in)
@@ -403,13 +399,12 @@ object DeriveJsonDecoder {
           if (Lexer.firstField(trace, in_))
             do {
               if (Lexer.field(trace, in_, hintmatrix) != -1) {
-                val field = Lexer.enumeration(trace, in_, matrix)
-                if (field == -1) Lexer.error("invalid disambiguator", trace)
-                in_.rewind()
-                val trace_ = spans(field) :: trace
-                return tcs(field).unsafeDecode(trace_, in_).asInstanceOf[A]
-              } else
-                Lexer.skipValue(trace, in_)
+                val idx = Lexer.enumeration(trace, in_, matrix)
+                if (idx != -1) {
+                  in_.rewind()
+                  return tcs(idx).unsafeDecode(spans(idx) :: trace, in_).asInstanceOf[A]
+                } else Lexer.error("invalid disambiguator", trace)
+              } else Lexer.skipValue(trace, in_)
             } while (Lexer.nextField(trace, in_))
           Lexer.error(s"missing hint '$hintfield'", trace)
         }

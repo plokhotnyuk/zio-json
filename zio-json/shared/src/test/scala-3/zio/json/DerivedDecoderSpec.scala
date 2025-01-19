@@ -10,52 +10,48 @@ object DerivedDecoderSpec extends ZIOSpecDefault {
     test("Derives for a product type") {
       case class Foo(bar: String) derives JsonDecoder
 
-      val result = "{\"bar\": \"hello\"}".fromJson[Foo]
-
-      assertTrue(result == Right(Foo("hello")))
+      assertTrue("{\"bar\": \"hello\"}".fromJson[Foo] == Right(Foo("hello")))
     },
     test("Derives for a sum enum Enumeration type") {
+      @jsonHintNames(SnakeCase)
       enum Foo derives JsonDecoder:
         case Bar
         case Baz
         case Qux
 
-      val result = "\"Qux\"".fromJson[Foo]
-
-      assertTrue(result == Right(Foo.Qux))
+      assertTrue("\"qux\"".fromJson[Foo] == Right(Foo.Qux))
+      assertTrue("\"bar\"".fromJson[Foo] == Right(Foo.Bar))
     },
     test("Derives for a sum sealed trait Enumeration type") {
       sealed trait Foo derives JsonDecoder
       object Foo:
+        @jsonHint("Barrr")
         case object Bar extends Foo
         case object Baz extends Foo
         case object Qux extends Foo
 
-      val result = "\"Qux\"".fromJson[Foo]
-
-      assertTrue(result == Right(Foo.Qux))
+      assertTrue("\"Qux\"".fromJson[Foo] == Right(Foo.Qux))
+      assertTrue("\"Barrr\"".fromJson[Foo] == Right(Foo.Bar))
     },
     test("Derives for a sum sealed trait Enumeration type with discriminator") {
       @jsonDiscriminator("$type")
       sealed trait Foo derives JsonDecoder
       object Foo:
+        @jsonHint("Barrr")
         case object Bar extends Foo
         case object Baz extends Foo
         case object Qux extends Foo
 
-      val result = """{"$type":"Qux"}""".fromJson[Foo]
-
-      assertTrue(result == Right(Foo.Qux))
+      assertTrue("""{"$type":"Qux"}""".fromJson[Foo] == Right(Foo.Qux))
+      assertTrue("""{"$type":"Barrr"}""".fromJson[Foo] == Right(Foo.Bar))
     },
-    test("Derives for a sum ADT type") {
+    test("Derives for a recursive sum ADT type") {
       enum Foo derives JsonDecoder:
         case Bar
         case Baz(baz: String)
         case Qux(foo: Foo)
 
-      val result = "{\"Qux\":{\"foo\":{\"Bar\":{}}}}".fromJson[Foo]
-
-      assertTrue(result == Right(Foo.Qux(Foo.Bar)))
+      assertTrue("{\"Qux\":{\"foo\":{\"Bar\":{}}}}".fromJson[Foo] == Right(Foo.Qux(Foo.Bar)))
     },
     test("Derives and decodes for a union of string-based literals") {
       case class Foo(aOrB: "A" | "B", optA: Option["A"]) derives JsonDecoder

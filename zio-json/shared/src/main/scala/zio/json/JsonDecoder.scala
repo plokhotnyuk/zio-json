@@ -369,18 +369,17 @@ object JsonDecoder extends GeneratedTupleDecoders with DecoderLowPriority1 with 
     B: JsonDecoder[B]
   ): JsonDecoder[Either[A, B]] =
     new JsonDecoder[Either[A, B]] {
-
-      val names: Array[String] =
-        Array("a", "Left", "left", "b", "Right", "right")
-      val matrix: StringMatrix    = new StringMatrix(names)
-      val spans: Array[JsonError] = names.map(JsonError.ObjectAccess)
+      private[this] val names  = Array("a", "Left", "left", "b", "Right", "right")
+      private[this] val matrix = new StringMatrix(names)
+      private[this] val spans  = names.map(JsonError.ObjectAccess(_))
 
       def unsafeDecode(
         trace: List[JsonError],
         in: RetractReader
       ): Either[A, B] = {
         Lexer.char(trace, in, '{')
-        val values = new Array[Any](2)
+        var left: Any  = null
+        var right: Any = null
         if (Lexer.firstField(trace, in))
           while ({
             {
@@ -389,19 +388,19 @@ object JsonDecoder extends GeneratedTupleDecoders with DecoderLowPriority1 with 
               else {
                 val trace_ = spans(field) :: trace
                 if (field < 3) {
-                  if (values(0) != null) Lexer.error("duplicate", trace_)
-                  values(0) = A.unsafeDecode(trace_, in)
+                  if (left != null) Lexer.error("duplicate", trace_)
+                  left = A.unsafeDecode(trace_, in)
                 } else {
-                  if (values(1) != null) Lexer.error("duplicate", trace_)
-                  values(1) = B.unsafeDecode(trace_, in)
+                  if (right != null) Lexer.error("duplicate", trace_)
+                  right = B.unsafeDecode(trace_, in)
                 }
               }
             }; Lexer.nextField(trace, in)
           }) ()
-        if (values(0) == null && values(1) == null) Lexer.error("missing fields", trace)
-        if (values(0) != null && values(1) != null) Lexer.error("ambiguous either, zip present", trace)
-        if (values(0) != null) Left(values(0).asInstanceOf[A])
-        else Right(values(1).asInstanceOf[B])
+        if (left == null && right == null) Lexer.error("missing fields", trace)
+        if (left != null && right != null) Lexer.error("ambiguous either, zip present", trace)
+        if (left != null) Left(left.asInstanceOf[A])
+        else Right(right.asInstanceOf[B])
       }
     }
 

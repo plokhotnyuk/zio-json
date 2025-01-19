@@ -1,7 +1,6 @@
 package zio.json.data.twitter
 
 import com.github.ghik.silencer.silent
-import io.circe
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 import zio.json._

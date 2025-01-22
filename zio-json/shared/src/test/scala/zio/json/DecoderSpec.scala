@@ -16,6 +16,15 @@ object DecoderSpec extends ZIOSpecDefault {
   val spec: Spec[Environment, Any] =
     suite("Decoder")(
       suite("fromJson")(
+        test("issue 1235") {
+          final case class Data(a: Chunk[String], b: Chunk[String])
+
+          object Data {
+            implicit val decoder: JsonDecoder[Data] = DeriveJsonDecoder.gen
+          }
+
+          assert("{\"error\":\"invalid\"}".fromJson[Data])(isLeft(equalTo(".a(missing)")))
+        },
         test("BigDecimal") {
           assert("123".fromJson[BigDecimal])(isRight(equalTo(BigDecimal(123))))
         },

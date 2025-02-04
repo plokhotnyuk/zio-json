@@ -300,24 +300,39 @@ private[json] trait EncoderLowPriority1 extends EncoderLowPriority2 {
 
   implicit def array[A](implicit A: JsonEncoder[A], classTag: scala.reflect.ClassTag[A]): JsonEncoder[Array[A]] =
     new JsonEncoder[Array[A]] {
-      override def isEmpty(as: Array[A]): Boolean = as.isEmpty
+      override def isEmpty(as: Array[A]): Boolean = as.length == 0
 
-      def unsafeEncode(as: Array[A], indent: Option[Int], out: Write): Unit =
-        if (as.isEmpty) out.write("[]")
+      def unsafeEncode(as: Array[A], indent: Option[Int], out: Write): Unit = {
+        val len = as.length
+        if (len == 0) out.write("[]")
         else {
           out.write('[')
-          if (indent.isDefined) unsafeEncodePadded(as, indent, out)
-          else unsafeEncodeCompact(as, indent, out)
+          if (indent eq None) {
+            var i    = 0
+            val encA = A
+            as match {
+              case xs: Array[AnyRef] =>
+                while (i < len) { if (i != 0) out.write(','); encA.unsafeEncode(xs(i), indent, out); i += 1 }
+              case xs: Array[Int] =>
+                while (i < len) { if (i != 0) out.write(','); encA.unsafeEncode(xs(i), indent, out); i += 1 }
+              case xs: Array[Long] =>
+                while (i < len) { if (i != 0) out.write(','); encA.unsafeEncode(xs(i), indent, out); i += 1 }
+              case xs: Array[Float] =>
+                while (i < len) { if (i != 0) out.write(','); encA.unsafeEncode(xs(i), indent, out); i += 1 }
+              case xs: Array[Double] =>
+                while (i < len) { if (i != 0) out.write(','); encA.unsafeEncode(xs(i), indent, out); i += 1 }
+              case xs: Array[Byte] =>
+                while (i < len) { if (i != 0) out.write(','); encA.unsafeEncode(xs(i), indent, out); i += 1 }
+              case xs: Array[Short] =>
+                while (i < len) { if (i != 0) out.write(','); encA.unsafeEncode(xs(i), indent, out); i += 1 }
+              case xs: Array[Boolean] =>
+                while (i < len) { if (i != 0) out.write(','); encA.unsafeEncode(xs(i), indent, out); i += 1 }
+              case xs: Array[Char] =>
+                while (i < len) { if (i != 0) out.write(','); encA.unsafeEncode(xs(i), indent, out); i += 1 }
+              case _ =>
+            }
+          } else unsafeEncodePadded(as, indent, out)
           out.write(']')
-        }
-
-      private[this] def unsafeEncodeCompact(as: Array[A], indent: Option[Int], out: Write): Unit = {
-        val len = as.length
-        var i   = 0
-        while (i < len) {
-          if (i != 0) out.write(',')
-          A.unsafeEncode(as(i), indent, out)
-          i += 1
         }
       }
 

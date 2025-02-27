@@ -402,25 +402,24 @@ private[json] trait EncoderLowPriority1 extends EncoderLowPriority2 {
           out.write(']')
         }
 
-      private[this] def unsafeEncodeCompact(as: Array[A], indent: Option[Int], out: Write): Unit = {
-        val len = as.length
-        var i   = 0
-        while (i < len) {
-          if (i != 0) out.write(',')
-          A.unsafeEncode(as(i), indent, out)
-          i += 1
+      private[this] def unsafeEncodeCompact(as: Array[A], indent: Option[Int], out: Write): Unit =
+        as.foreach {
+          var comma = false
+          a =>
+            if (comma) out.write(',')
+            else comma = true
+            A.unsafeEncode(a, indent, out)
         }
-      }
 
       private[this] def unsafeEncodePadded(as: Array[A], indent: Option[Int], out: Write): Unit = {
-        val indent_ = bump(indent)
-        val len     = as.length
-        var i       = 0
-        while (i < len) {
-          if (i != 0) out.write(',')
-          pad(indent_, out)
-          A.unsafeEncode(as(i), indent_, out)
-          i += 1
+        as.foreach {
+          val indent_ = bump(indent)
+          var comma = false
+          a =>
+            if (comma) out.write(',')
+            else comma = true
+            pad(indent_, out)
+            A.unsafeEncode(a, indent, out)
         }
         pad(indent, out)
       }

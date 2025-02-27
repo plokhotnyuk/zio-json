@@ -11,42 +11,25 @@ final class FastStringWrite(initial: Int) extends Write {
   @inline def reset(): Unit = count = 0
 
   def write(s: String): Unit = {
-    val l  = s.length
-    var cs = chars
-    val i  = count
-    if (i + l >= cs.length) {
-      cs = Arrays.copyOf(cs, Math.max(cs.length << 1, i + l))
-      chars = cs
-    }
-    s.getChars(0, l, cs, i)
+    val l = s.length
+    val i = count
+    if (i + l >= chars.length) chars = Arrays.copyOf(chars, Math.max(chars.length << 1, i + l))
+    s.getChars(0, l, chars, i)
     count = i + l
   }
 
   def write(c: Char): Unit = {
-    var cs = chars
-    val i  = count
-    if (i + 1 >= cs.length) {
-      cs = Arrays.copyOf(cs, cs.length << 1)
-      chars = cs
-    }
-    cs(i) = c
+    val i = count
+    if (i + 1 >= chars.length) chars = Arrays.copyOf(chars, chars.length << 1)
+    chars(i) = c
     count = i + 1
   }
 
   override def write(cs: Array[Char], from: Int, to: Int): Unit = {
-    var cs_   = chars
     val from_ = count
     val len   = to - from
-    if (from_ + len >= cs_.length) {
-      cs_ = Arrays.copyOf(cs_, Math.max(cs_.length << 1, from_ + len))
-      chars = cs_
-    }
-    var i = 0
-    while (i < len) {
-      cs_(from_ + i) = cs(from + i)
-      i += 1
-    }
-    count = from_ + len
+    if (from_ + len >= chars.length) chars = Arrays.copyOf(chars, Math.max(chars.length << 1, from_ + len))
+    System.arraycopy(cs, from, chars, from_, len)
   }
 
   override def write(c1: Char, c2: Char): Unit = {

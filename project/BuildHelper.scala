@@ -234,7 +234,16 @@ object BuildHelper {
     mimaCheckDirection    := "backward", // TODO: find how we can use "both" for patch versions of 1.x releases
     mimaBinaryIssueFilters ++= Seq(
       exclude[Problem]("zio.json.internal.*"),
-      exclude[Problem]("zio.json.yaml.internal.*")
+      exclude[Problem]("zio.json.yaml.internal.*"),
+      // FIXME: Remove before next release
+      exclude[Problem]("zio.json.DecoderLowPriority3.strip$default$2$"),
+      exclude[Problem]("zio.json.JsonDecoder.mapStringOrFail"),
+      exclude[Problem]("zio.json.JsonDecoder.parseJavaTime"),
+      exclude[Problem]("zio.json.JsonDecoder.strip"),
+      exclude[Problem]("zio.json.JsonDecoder.strip$default$2"),
+      exclude[Problem]("zio.json.JsonEncoder.explicit"),
+      exclude[Problem]("zio.json.JsonEncoder.stringify"),
+      exclude[Problem]("zio.json.JsonFieldDecoder.mapStringOrFail")
     ),
     mimaFailOnProblem := true
   )
